@@ -2,6 +2,11 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 
+struct game {
+    boost::filesystem::path name;
+    boost::filesystem::path directory;
+};
+
 void wait() {
     std::cout << "Press any key to continue... " << std::endl << std::flush;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -14,19 +19,25 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    /* 3 lines below are temporary, suspected a bug in Boost library when an argument is passed, the current directory changes to that of the passed argument. */
+    std::string exec_path = std::string(argv[0]).substr(0, std::string(argv[0]).find_last_of('\\'));
+    boost::filesystem::current_path(exec_path);
+    std::cout << boost::filesystem::current_path().string() << std::endl;
+
     if (!boost::filesystem::exists("config.json")) {
         std::cerr << "config.json not found. Creating..." << std::endl;
         boost::property_tree::ptree root;
         std::cout << "Enter DoJa directory (or drag and drop): " << std::endl;
         std::string path;
         std::getline(std::cin, path);
-        path.erase(std::remove(path.begin(), path.end(), '\"'), path.end());
-        if (!boost::filesystem::is_directory(path)) {
+        boost::filesystem::path doja_path(path);
+        std::cout << doja_path.string() << std::endl;
+        if (!boost::filesystem::is_directory(doja_path)) {
             std::cerr << "Not a directory. Exiting..." << std::endl;
             wait();
             return -1;
         } else {
-            if (!boost::filesystem::exists(path + "/bin/doja.exe")) {
+            if (!boost::filesystem::exists(doja_path.append("/bin/doja.exe"))) {
                 std::cerr << "DoJa directory invalid. Exiting..." << std::endl;
                 wait();
                 return -1;
@@ -36,9 +47,9 @@ int main(int argc, char *argv[]) {
         boost::property_tree::write_json("config.json", root);
     }
 
-    std::string name = std::string(argv[1]);
+    boost::filesystem::path arg_path((std::string(argv[1])));
 
-    if (name.find(".jar") == std::string::npos && name.find(".jam") == std::string::npos) {
+    if (arg_path.string().find(".jar") == std::string::npos && arg_path.string().find(".jam") == std::string::npos) {
         std::cerr << "File isn't of .jam or .jar extension. Exiting..." << std::endl;
         wait();
         return -1;
@@ -47,20 +58,23 @@ int main(int argc, char *argv[]) {
         boost::property_tree::read_json("config.json", root);
         std::string doja_path = root.get<std::string>("doja_path");
         std::cout << "Creating a project with jam/jar combo..." << std::endl;
-        std::string game = name.substr(name.find_last_of('/') + 1, name.length());
-        game = game.substr(0, game.find_first_of('.'));
-        boost::filesystem::path game_path = boost::filesystem::path(game);
+        game game{
+                arg_path.string().substr(arg_path.string().find_last_of('\\') + 1,
+                                         arg_path.string().find_last_of('.') - arg_path.string().find_last_of('\\') -
+                                         1),
+                arg_path.string().substr(0, arg_path.string().find_last_of('\\'))
+        };
         boost::filesystem::path path(doja_path + "/apps/");
         boost::filesystem::current_path(path);
-        if (create_directory(game_path)) {
-            std::cerr << "Could not create directory. Exiting..." << std::endl;
-            wait();
-            return -1;
-        }
-        boost::filesystem::current_path(path / game_path);
-        name = name.substr(0, name.find_last_of('.'));
-        copy_file(name + ".jar", boost::filesystem::current_path() / game_path.string().append(".jar"), boost::filesystem::copy_option::overwrite_if_exists);
-        copy_file(name + ".jam", boost::filesystem::current_path() / game_path.string().append(".jam"), boost::filesystem::copy_option::overwrite_if_exists);
+        boost::filesystem::create_directory(path / game.name);
+        boost::filesystem::create_directory(path / game.name / "bin");
+        boost::filesystem::current_path(path / game.name / "bin");
+        copy_file(game.directory / game.name.string().append(".jam"),
+                  boost::filesystem::current_path() / game.name.string().append(".jam"),
+                  boost::filesystem::copy_option::overwrite_if_exists);
+        copy_file(game.directory / game.name.string().append(".jar"),
+                  boost::filesystem::current_path() / game.name.string().append(".jar"),
+                  boost::filesystem::copy_option::overwrite_if_exists);
         std::cout << "Project created." << std::endl;
     }
 
