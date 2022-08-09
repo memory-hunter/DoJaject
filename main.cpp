@@ -3,7 +3,7 @@
 #include <iostream>
 
 void wait() {
-    std::cout << "Press any key to continue... " << std::flush;
+    std::cout << "Press any key to continue... " << std::endl << std::flush;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
@@ -36,7 +36,9 @@ int main(int argc, char *argv[]) {
         boost::property_tree::write_json("config.json", root);
     }
 
-    if (std::string(argv[1]).find(".jam") || std::string(argv[1]).find(".jar")) {
+    std::string name = std::string(argv[1]);
+
+    if (name.find(".jar") == std::string::npos && name.find(".jam") == std::string::npos) {
         std::cerr << "File isn't of .jam or .jar extension. Exiting..." << std::endl;
         wait();
         return -1;
@@ -45,18 +47,20 @@ int main(int argc, char *argv[]) {
         boost::property_tree::read_json("config.json", root);
         std::string doja_path = root.get<std::string>("doja_path");
         std::cout << "Creating a project with jam/jar combo..." << std::endl;
-        boost::filesystem::path path(doja_path + "/apps");
-        std::string name = std::string(argv[1]);
-        name.erase(std::remove(name.begin(), name.end(), '.'), name.end());
-        if (!boost::filesystem::create_directory(path / name / "bin")) {
+        std::string game = name.substr(name.find_last_of('/') + 1, name.length());
+        game = game.substr(0, game.find_first_of('.'));
+        boost::filesystem::path game_path = boost::filesystem::path(game);
+        boost::filesystem::path path(doja_path + "/apps/");
+        boost::filesystem::current_path(path);
+        if (create_directory(game_path)) {
             std::cerr << "Could not create directory. Exiting..." << std::endl;
             wait();
             return -1;
         }
-        boost::filesystem::path project_path(path / name / "bin");
-        copy_file(argv[1], project_path / argv[1]);
-        copy_file(name + ".jam", project_path / (name + ".jam"));
-        copy_file(name + ".jar", project_path / (name + ".jar"));
+        boost::filesystem::current_path(path / game_path);
+        name = name.substr(0, name.find_last_of('.'));
+        copy_file(name + ".jar", boost::filesystem::current_path() / game_path.string().append(".jar"), boost::filesystem::copy_option::overwrite_if_exists);
+        copy_file(name + ".jam", boost::filesystem::current_path() / game_path.string().append(".jam"), boost::filesystem::copy_option::overwrite_if_exists);
         std::cout << "Project created." << std::endl;
     }
 
