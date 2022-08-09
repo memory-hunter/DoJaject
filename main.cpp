@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
         std::string path;
         std::getline(std::cin, path);
         path.erase(std::remove(path.begin(), path.end(), '\"'), path.end());
-        std::cout << path << std::endl;
         if (!boost::filesystem::is_directory(path)) {
             std::cerr << "Not a directory. Exiting..." << std::endl;
             wait();
