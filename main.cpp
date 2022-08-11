@@ -53,7 +53,6 @@ int main() {
                 arg_path.stem(),
                 arg_path.parent_path()
         };
-        std::cout << game.name << " " << game.directory << std::endl;
         boost::filesystem::path path(doja_path + "/apps/");
         boost::filesystem::current_path(path);
         boost::filesystem::create_directory(path / game.name);
