@@ -14,9 +14,5 @@ if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
     add_executable(DoJaject main.cpp)
     target_include_directories(DoJaject PUBLIC ${Boost_INCLUDE_DIRS})
-    target_link_libraries(DoJaject PRIVATE Boost::filesystem Boost::system)
+    target_link_libraries(DoJaject PRIVATE Boost::filesystem Boost::system winpthread gcc stdc++)
 endif ()
-
-set(CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} -static-libgcc -static-libstdc++")
-
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
