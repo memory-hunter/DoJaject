@@ -19,6 +19,9 @@ int main() {
         std::cout << "Enter DoJa directory (or drag and drop): " << std::endl;
         std::string path;
         std::getline(std::cin, path);
+        if (path[0] == '\"' && path[path.length() - 1] == '\"') {
+            path = path.substr(1, path.length() - 2);
+        }
         boost::filesystem::path doja_path(path);
         if (!boost::filesystem::is_directory(doja_path)) {
             std::cerr << "Not a directory. Exiting..." << std::endl;
@@ -39,6 +42,9 @@ int main() {
     boost::filesystem::path arg_path;
     std::string arg;
     std::getline(std::cin, arg);
+    if (arg[0] == '\"' && arg[arg.length() - 1] == '\"') {
+        arg = arg.substr(1, arg.length() - 2);
+    }
     arg_path = boost::filesystem::path(arg);
     if (arg_path.extension() != ".jam" && arg_path.extension() != ".jar") {
         std::cerr << "File isn't of .jam or .jar extension. Exiting..." << std::endl;
@@ -58,12 +64,12 @@ int main() {
         boost::filesystem::create_directory(path / game.name);
         boost::filesystem::create_directory(path / game.name / "bin");
         boost::filesystem::current_path(path / game.name / "bin");
-        copy_file(game.directory / game.name.string().append(".jam"),
-                  boost::filesystem::current_path() / game.name.string().append(".jam"),
-                  boost::filesystem::copy_option::overwrite_if_exists);
-        copy_file(game.directory / game.name.string().append(".jar"),
-                  boost::filesystem::current_path() / game.name.string().append(".jar"),
-                  boost::filesystem::copy_option::overwrite_if_exists);
+        copy_file(game.directory / game.name.string() += ".jam",
+			boost::filesystem::current_path() / game.name.string() += ".jam",
+			boost::filesystem::copy_option::overwrite_if_exists);
+		copy_file(game.directory / game.name.string() += ".jar",
+			boost::filesystem::current_path() / game.name.string() += ".jar",
+			boost::filesystem::copy_option::overwrite_if_exists);
         std::cout << "Project created." << std::endl;
     }
     wait();
