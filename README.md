@@ -6,9 +6,14 @@ First, clone the repository:
 
 ```git clone git@github.com:memory-hunter/DoJaject.git```
 
-You need to have [Boost](https://www.boost.org) libraries for compilation. Utilize CMake to build the project.
+You need to have [Boost](https://www.boost.org).
+
+For Windows XP support, place a version of [Boost](https://www.boost.org) that supports Windows XP in `/libs/` folder, and install v141_xp toolset.
 
 ## Usage
+
+Use Clion (or any other IDE) with CMake for Win Vista, 7, 8, 8.1, 10, 11 builds.
+Use VS project for Windows XP support.
 
 After building the project, or downloading the release, simply drag and drop the .jar or .jam file.
 
