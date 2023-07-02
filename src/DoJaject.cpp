@@ -47,7 +47,6 @@ void import_games(const std::vector<std::string>& names) {
     boost::filesystem::path doja_path;
     boost::property_tree::ptree root;
     boost::filesystem::current_path(GLOB_EXEC_PATH);
-    std::cout << boost::filesystem::current_path().string();
     boost::property_tree::read_json("config.json", root);
     doja_path = root.get<std::string>("doja_path");
 
