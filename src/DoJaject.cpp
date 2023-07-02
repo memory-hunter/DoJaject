@@ -72,6 +72,11 @@ void import_games(const std::vector<std::string>& names) {
         boost::filesystem::path jam_file = game.directory / (game.name.string() + ".jam");
         boost::filesystem::path jar_file = game.directory / (game.name.string() + ".jar");
 
+        if (!boost::filesystem::exists(jam_file) || !boost::filesystem::exists(jar_file)) {
+            std::cerr << "Missing .jam or .jar file. Skipping..." << std::endl;
+            continue;
+        }
+
         boost::filesystem::copy_file(jam_file, project_path / "bin" / (game.name.string() + ".jam"),
             boost::filesystem::copy_option::overwrite_if_exists);
         boost::filesystem::copy_file(jar_file, project_path / "bin" / (game.name.string() + ".jar"),
@@ -99,6 +104,7 @@ int main() {
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT;
     
     check_json();
+    std::cout << "Select all .jam files to import (.jar should be in the same directory, .sp is optional).\n";
     if (GetOpenFileNameA(&ofn)) {
         char* p = szf;
         std::string dir = p;
