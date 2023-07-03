@@ -3,11 +3,14 @@
 #include <iostream>
 #include <windows.h>
 
-const boost::filesystem::path GLOB_EXEC_PATH = boost::filesystem::current_path();
+using namespace boost::filesystem;
+using boost::property_tree::ptree;
+
+const path GLOB_EXEC_PATH = current_path();
 
 struct game {
-    boost::filesystem::path name;
-    boost::filesystem::path directory;
+    path name;
+    path directory;
 };
 
 void wait() {
@@ -16,42 +19,42 @@ void wait() {
 }
 
 void check_json() {
-    if (!boost::filesystem::exists("config.json")) {
+    if (!exists("config.json")) {
         std::cerr << "config.json not found. Creating..." << std::endl;
-        boost::property_tree::ptree root;
+        ptree root;
         std::cout << "Enter DoJa directory (or drag and drop): " << std::endl;
-        std::string path;
-        std::getline(std::cin, path);
-        if (path[0] == '\"' && path[path.length() - 1] == '\"') {
-            path = path.substr(1, path.length() - 2);
+        std::string arg_path;
+        std::getline(std::cin, arg_path);
+        if (arg_path[0] == '\"' && arg_path[arg_path.length() - 1] == '\"') {
+            arg_path = arg_path.substr(1, arg_path.length() - 2);
         }
-        boost::filesystem::path doja_path(path);
-        if (!boost::filesystem::is_directory(doja_path)) {
+        path doja_path(arg_path);
+        if (!is_directory(doja_path)) {
             std::cerr << "Not a directory. Exiting..." << std::endl;
             wait();
             exit(-1);
         }
         else {
-            if (!boost::filesystem::exists(doja_path.append("/bin/doja.exe"))) {
+            if (!exists(doja_path.append("/bin/doja.exe"))) {
                 std::cerr << "DoJa directory invalid. Exiting..." << std::endl;
                 wait();
                 exit(-1);
             }
         }
-        root.put("doja_path", path);
-        boost::property_tree::write_json("config.json", root);
+        root.put("doja_path", arg_path);
+        write_json("config.json", root);
     }
 }
 
 void import_games(const std::vector<std::string>& names) {
-    boost::filesystem::path doja_path;
-    boost::property_tree::ptree root;
-    boost::filesystem::current_path(GLOB_EXEC_PATH);
-    boost::property_tree::read_json("config.json", root);
+    path doja_path;
+    ptree root;
+    current_path(GLOB_EXEC_PATH);
+    read_json("config.json", root);
     doja_path = root.get<std::string>("doja_path");
 
     for (const std::string& name : names) {
-        boost::filesystem::path file(name);
+        path file(name);
         
         game game{
             file.stem(),
@@ -60,30 +63,35 @@ void import_games(const std::vector<std::string>& names) {
 
         std::cout << "Creating for " << game.name << "...\n";
 
-        boost::filesystem::path project_path = doja_path / "apps" / game.name;
+        path project_path = doja_path / "apps" / game.name;
 
-        boost::filesystem::create_directory(project_path);
-        boost::filesystem::create_directory(project_path / "bin");
-        boost::filesystem::create_directory(project_path / "sp");
+        create_directory(project_path);
+        create_directory(project_path / "bin");
+        create_directory(project_path / "sp");
 
-        boost::filesystem::current_path(project_path / "bin");
+        if (!exists(project_path) || !exists(project_path / "bin") || !exists(project_path / "sp")) {
+            std::cerr << "Directories couldn't create. Skipping...";
+            continue;
+        }
 
-        boost::filesystem::path jam_file = game.directory / (game.name.string() + ".jam");
-        boost::filesystem::path jar_file = game.directory / (game.name.string() + ".jar");
+        current_path(project_path / "bin");
 
-        if (!boost::filesystem::exists(jam_file) || !boost::filesystem::exists(jar_file)) {
+        path jam_file = game.directory / (game.name.string() + ".jam");
+        path jar_file = game.directory / (game.name.string() + ".jar");
+
+        if (!exists(jam_file) || !exists(jar_file)) {
             std::cerr << "Missing .jam or .jar file. Skipping..." << std::endl;
             continue;
         }
 
-        boost::filesystem::copy_file(jam_file, project_path / "bin" / (game.name.string() + ".jam"),
-            boost::filesystem::copy_option::overwrite_if_exists);
-        boost::filesystem::copy_file(jar_file, project_path / "bin" / (game.name.string() + ".jar"),
-            boost::filesystem::copy_option::overwrite_if_exists);
+        copy_file(jam_file, project_path / "bin" / (game.name.string() + ".jam"),
+            copy_option::overwrite_if_exists);
+        copy_file(jar_file, project_path / "bin" / (game.name.string() + ".jar"),
+            copy_option::overwrite_if_exists);
 
-        boost::filesystem::current_path(project_path / "sp");
+        current_path(project_path / "sp");
 
-        if (boost::filesystem::exists(game.directory / (game.name.string() + ".sp"))) {
+        if (exists(game.directory / (game.name.string() + ".sp"))) {
             std::cout << "OPTIONAL: .sp found. Copying...\n";
         }
     }
@@ -91,7 +99,7 @@ void import_games(const std::vector<std::string>& names) {
 
 int main() {
     
-    char szf[MAX_PATH] = {0};
+    char szf[MAX_PATH * 20] = {0};
     std::vector<std::string> files;
     OPENFILENAMEA ofn;
     ZeroMemory(&ofn, sizeof(ofn));
@@ -99,7 +107,7 @@ int main() {
     ofn.hwndOwner = nullptr;
     ofn.lpstrFilter = "JAM Files (*.jam)\0*.jam\0";
     ofn.lpstrFile = szf;
-    ofn.nMaxFile = MAX_PATH;
+    ofn.nMaxFile = MAX_PATH * 20;
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT;
     
     check_json();
