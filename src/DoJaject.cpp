@@ -114,20 +114,26 @@ int main() {
     std::cout << "Select all .jam files to import (.jar should be in the same directory, .sp is optional).\n";
     if (GetOpenFileNameA(&ofn)) {
         char* p = szf;
-        std::string dir = p;
-        p += dir.length() + 1;
+        path dir = p;
+        p += dir.string().length() + 1;
         
-        while (*p) {
-            std::string fp = dir + "\\" + p;
-            if (*p == '\0') {
-                files.push_back(fp);
-                p += strlen(p + 1) + 1;
-            }
-            else {
-                files.push_back(fp);
-                p += strlen(p) + 1;
+        if (dir.extension() == ".jam") {
+            files.push_back(dir.string());
+        }
+        else {
+            while (*p) {
+                std::string fp = dir.string() + "\\" + p;
+                if (*p == '\0') {
+                    files.push_back(fp);
+                    p += strlen(p + 1) + 1;
+                }
+                else {
+                    files.push_back(fp);
+                    p += strlen(p) + 1;
+                }
             }
         }
+
         delete[] p;
     }
     import_games(files);
