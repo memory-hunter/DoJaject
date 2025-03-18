@@ -1,6 +1,9 @@
 # DoJaject
 A program to quickly import a game in DoJa SDK.
 
+## Download
+Please, for downloading existing builds, check the releases page. There is already a release available.
+
 ## Build
 First, clone the repository:
 
