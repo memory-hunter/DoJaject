@@ -1,3 +1,5 @@
+# **THIS WILL NOT BE MAINTAINED ANYMORE.** Please use [Keitai World Launcher](https://github.com/Yuvi-App/Keitai-World-Launcher.git) for consumer use. This will remain only for "quick and dirty" importing if anyone needs it.
+
 # DoJaject
 A program to quickly import a game in DoJa SDK.
 
